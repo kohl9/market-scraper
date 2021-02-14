@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer')
 const fs = require('fs')
 
 const url = 'https://skins.guru/csgo/2'
-
+let array = []
 
 async function run() {
     const browser = await puppeteer.launch()
@@ -13,12 +13,20 @@ async function run() {
     
     await page.goto(url)
     
-    await page.waitForSelector('.items')
+    let countOfPages = await page.$eval('.pagination-info', elem => elem.textContent)
 
-    const array = await page.$$eval('.item-inner', elements => elements.map(val => ({
-        title: val.querySelector('.item-title a').textContent,
-        price: val.querySelector('.item-price span').textContent
-    })))
+    for (let i = 2; i <= parseInt(countOfPages.slice(14)) + 1; i++) {
+        await page.waitForSelector('.items')
+
+        let interArray = await page.$$eval('.item-inner', elements => elements.map(val => ({
+            title: val.querySelector('.item-title a').textContent,
+            price: val.querySelector('.item-price span').textContent
+        })))
+
+        array = array.concat(interArray)
+
+        await page.goto(`https://skins.guru/csgo/2?page=${i}`)
+    }
 
     await browser.close()
 
